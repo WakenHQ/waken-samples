@@ -21,7 +21,7 @@ PyPI on the fly.
 | [`scheduled_digest.py`](samples/scheduled_digest.py) | `runtime.cron`/`after`, fetch → summarize → deliver | `GROQ_API_KEY` |
 | [`multi_model_broadcast.py`](samples/multi_model_broadcast.py) | `runtime.broadcast()` across three providers at once | `GROQ_API_KEY`, `GEMINI_API_KEY`, Ollama optional |
 | [`voice_assistant.py`](samples/voice_assistant.py) | Voice `Source`/`Output` (`waken-voice`) — speech in, speech out | `OPENAI_API_KEY` |
-| [`hey_assistant.py`](samples/hey_assistant.py) | Live push-to-talk mic + wake-word routing across several Targets | `OPENAI_API_KEY`, `GROQ_API_KEY`, `GEMINI_API_KEY` |
+| [`hey_assistant.py`](samples/hey_assistant.py) | Live push-to-talk mic + wake-word routing across several Targets | `OPENAI_API_KEY` required; `GROQ_API_KEY`/`GEMINI_API_KEY` each optional, ≥1 assistant needed |
 
 The first six default to Groq, Gemini, and/or Ollama specifically because
 those are free-tier (Groq, Gemini) or fully local/free (Ollama) and need
@@ -33,7 +33,11 @@ the `claude` CLI). Swap the adapter import for `waken-openai`,
 swap is the whole point of a Waken `Target`. `voice_assistant.py` and
 `hey_assistant.py` are the exception: `waken-voice` wraps OpenAI's audio API
 specifically (Whisper in, TTS out), so both need `OPENAI_API_KEY` regardless
-of which model answers the transcript.
+of which model answers the transcript. `hey_assistant.py` skips any
+assistant whose key isn't set rather than crashing on startup — set just
+`GROQ_API_KEY`, just `GEMINI_API_KEY`, both, or neither (in which case
+`OPENAI_API_KEY`, already mandatory for voice I/O, doubles as the sole
+"openai" assistant).
 
 ## Prerequisites
 
