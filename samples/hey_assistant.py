@@ -39,6 +39,14 @@ Setup:
     libportaudio2` on Debian/Ubuntu — the PyPI wheel doesn't bundle it
     there, and `sounddevice` fails to import without it.
 
+    WSL: PortAudio's ALSA backend defaults to a "default"/"sysdefault"
+    device with no real hardware behind it, which fails to even start
+    (a "Wait timed out"/PaErrorCode -9987 ALSA thread error) rather than
+    just being silent — your actual microphone is bridged in over
+    PulseAudio (WSLg), not raw ALSA. If that happens, this script prints
+    the available input devices; pick the one with "pulse" in its name
+    and rerun with `WAKEN_MIC_DEVICE=<index or name>` set.
+
 Run:
     uv run samples/hey_assistant.py
 
@@ -65,6 +73,15 @@ from waken_voice import VoiceOutput, VoiceSource
 SAMPLE_RATE = 16_000
 VOICE_INBOX = Path("./voice-inbox")
 WAKE_PATTERN = re.compile(r"^\s*hey[,]?\s+(\w+)[,:]?\s*(.*)$", re.IGNORECASE)
+
+
+def _resolve_device(value: str | None) -> int | str | None:
+    if value is None:
+        return None
+    return int(value) if value.isdigit() else value
+
+
+MIC_DEVICE = _resolve_device(os.environ.get("WAKEN_MIC_DEVICE"))
 
 ASSISTANTS = {}
 if os.environ.get("GROQ_API_KEY"):
@@ -114,13 +131,30 @@ async def record_clip() -> None:
     await wait_for_enter("\nPress Enter to start talking...")
     print("Recording — press Enter again to stop.")
     frames: list[np.ndarray] = []
-    with sd.InputStream(
-        samplerate=SAMPLE_RATE,
-        channels=1,
-        dtype="int16",
-        callback=lambda indata, *_: frames.append(indata.copy()),
-    ):
-        await wait_for_enter("")
+    try:
+        with sd.InputStream(
+            samplerate=SAMPLE_RATE,
+            channels=1,
+            dtype="int16",
+            device=MIC_DEVICE,
+            callback=lambda indata, *_: frames.append(indata.copy()),
+        ):
+            await wait_for_enter("")
+    except sd.PortAudioError as error:
+        print(f"\nCouldn't start the microphone stream: {error}")
+        print(
+            "On WSL this is almost always ALSA opening a device with no real\n"
+            "hardware behind it — the actual mic is bridged in over PulseAudio\n"
+            "(WSLg), not raw ALSA. Available input devices:"
+        )
+        for index, info in enumerate(sd.query_devices()):
+            if info["max_input_channels"] > 0:
+                print(f"  [{index}] {info['name']}")
+        print(
+            "Pick one whose name contains 'pulse', then rerun with:\n"
+            "  WAKEN_MIC_DEVICE=<index or name> uv run samples/hey_assistant.py"
+        )
+        raise SystemExit(1) from error
 
     if not frames:
         print("(nothing recorded)")
