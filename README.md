@@ -20,15 +20,19 @@ PyPI on the fly.
 | [`github_issue_triage.py`](samples/github_issue_triage.py) | Built-in `WebhookSource`, routing a GitHub issue straight to an LLM | `GROQ_API_KEY` |
 | [`scheduled_digest.py`](samples/scheduled_digest.py) | `runtime.cron`/`after`, fetch → summarize → deliver | `GROQ_API_KEY` |
 | [`multi_model_broadcast.py`](samples/multi_model_broadcast.py) | `runtime.broadcast()` across three providers at once | `GROQ_API_KEY`, `GEMINI_API_KEY`, Ollama optional |
+| [`voice_assistant.py`](samples/voice_assistant.py) | Voice `Source`/`Output` (`waken-voice`) — speech in, speech out | `OPENAI_API_KEY` |
 
-All six default to Groq, Gemini, and/or Ollama specifically because those
-are free-tier (Groq, Gemini) or fully local/free (Ollama) and need nothing
-beyond a Python package — no separate CLI or runtime install, unlike
-`waken-claude` (wraps the Claude Agent SDK, which expects Node.js + the
-`claude` CLI). Swap the adapter import for `waken-openai`, `waken-claude`,
-`waken-mistral`, `waken-cohere`, `waken-bedrock`, or `waken-copilot` and the
-rest of any script is unchanged — that one-line swap is the whole point of
-a Waken `Target`.
+The first six default to Groq, Gemini, and/or Ollama specifically because
+those are free-tier (Groq, Gemini) or fully local/free (Ollama) and need
+nothing beyond a Python package — no separate CLI or runtime install,
+unlike `waken-claude` (wraps the Claude Agent SDK, which expects Node.js +
+the `claude` CLI). Swap the adapter import for `waken-openai`,
+`waken-claude`, `waken-mistral`, `waken-cohere`, `waken-bedrock`, or
+`waken-copilot` and the rest of any script is unchanged — that one-line
+swap is the whole point of a Waken `Target`. `voice_assistant.py` is the one
+exception: `waken-voice` wraps OpenAI's audio API specifically (Whisper in,
+TTS out), so it needs `OPENAI_API_KEY` regardless of which model answers
+the transcript.
 
 ## Prerequisites
 
@@ -36,6 +40,8 @@ a Waken `Target`.
 - Whichever API key(s) the sample you're running needs (see table above).
   Free tiers: [Groq](https://console.groq.com/keys), [Gemini](https://aistudio.google.com/apikey).
   [Ollama](https://ollama.com) needs no key at all — just a locally running daemon.
+  `voice_assistant.py` needs an [OpenAI](https://platform.openai.com/api-keys) key
+  (Whisper/TTS have no free tier, but are inexpensive per request).
 
 ## Running a sample
 
@@ -65,7 +71,7 @@ API keys required at all, see
 main `waken` repo instead. Everything here is a small, complete program you
 could actually run for yourself: a Telegram bot, a Slack assistant, a
 file-drop summarizer, an issue triager, a morning digest, a model
-comparison.
+comparison, a voice assistant.
 
 CI here only lints and syntax-checks the scripts — it can't exercise them
 end-to-end without live credentials for half a dozen providers, and several
