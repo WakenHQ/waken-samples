@@ -21,7 +21,7 @@ PyPI on the fly.
 | [`scheduled_digest.py`](samples/scheduled_digest.py) | `runtime.cron`/`after`, fetch → summarize → deliver | `GROQ_API_KEY` |
 | [`multi_model_broadcast.py`](samples/multi_model_broadcast.py) | `runtime.broadcast()` across three providers at once | `GROQ_API_KEY`, `GEMINI_API_KEY`, Ollama optional |
 | [`voice_assistant.py`](samples/voice_assistant.py) | Voice `Source`/`Output` (`waken-voice`) — speech in, speech out | `OPENAI_API_KEY` |
-| [`hey_assistant.py`](samples/hey_assistant.py) | Live push-to-talk mic + wake-word routing across several Targets | `OPENAI_API_KEY` required; `GROQ_API_KEY`/`GEMINI_API_KEY` each optional, ≥1 assistant needed |
+| [`hey_assistant.py`](samples/hey_assistant.py) | Live push-to-talk mic + wake-word routing across several Targets | `OPENAI_API_KEY` or `GROQ_API_KEY` for voice I/O; `GEMINI_API_KEY` optional, ≥1 assistant needed |
 
 The first six default to Groq, Gemini, and/or Ollama specifically because
 those are free-tier (Groq, Gemini) or fully local/free (Ollama) and need
@@ -31,13 +31,17 @@ the `claude` CLI). Swap the adapter import for `waken-openai`,
 `waken-claude`, `waken-mistral`, `waken-cohere`, `waken-bedrock`, or
 `waken-copilot` and the rest of any script is unchanged — that one-line
 swap is the whole point of a Waken `Target`. `voice_assistant.py` and
-`hey_assistant.py` are the exception: `waken-voice` wraps OpenAI's audio API
-specifically (Whisper in, TTS out), so both need `OPENAI_API_KEY` regardless
-of which model answers the transcript. `hey_assistant.py` skips any
-assistant whose key isn't set rather than crashing on startup — set just
-`GROQ_API_KEY`, just `GEMINI_API_KEY`, both, or neither (in which case
-`OPENAI_API_KEY`, already mandatory for voice I/O, doubles as the sole
-"openai" assistant).
+`hey_assistant.py` are the exception, since `waken-voice` wraps a speech
+provider rather than a chat model. `voice_assistant.py` is hardwired to
+OpenAI's audio API (Whisper in, TTS out), so it needs `OPENAI_API_KEY`
+regardless of anything else. `hey_assistant.py` is more flexible:
+`OPENAI_API_KEY` still gets you Whisper in/TTS out, but without it,
+`GROQ_API_KEY` covers transcription instead (Groq's hosted Whisper) and
+speech output falls back to free, no-key gTTS. `hey_assistant.py` also
+skips any assistant whose key isn't set rather than crashing on startup —
+set just `GROQ_API_KEY`, just `GEMINI_API_KEY` alongside one of the other
+two, or any mix, as long as at least one assistant key is present and at
+least one of `OPENAI_API_KEY`/`GROQ_API_KEY` is set for voice capture.
 
 ## Prerequisites
 
@@ -45,9 +49,11 @@ assistant whose key isn't set rather than crashing on startup — set just
 - Whichever API key(s) the sample you're running needs (see table above).
   Free tiers: [Groq](https://console.groq.com/keys), [Gemini](https://aistudio.google.com/apikey).
   [Ollama](https://ollama.com) needs no key at all — just a locally running daemon.
-  `voice_assistant.py`/`hey_assistant.py` need an
+  `voice_assistant.py` needs an
   [OpenAI](https://platform.openai.com/api-keys) key (Whisper/TTS have no
-  free tier, but are inexpensive per request).
+  free tier, but are inexpensive per request); `hey_assistant.py` needs
+  that same OpenAI key *or* a [Groq](https://console.groq.com/keys) key,
+  since it can fall back to Groq transcription + free gTTS speech output.
 - `hey_assistant.py` also needs a working microphone and PortAudio. On
   macOS/Windows the `sounddevice` wheel usually bundles PortAudio; on Linux
   install it separately first (e.g. `sudo apt-get install libportaudio2`
