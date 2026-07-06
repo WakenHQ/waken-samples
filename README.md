@@ -10,6 +10,7 @@ Common, real-world use cases for [Waken](https://github.com/WakenHQ/waken) — "
 
 | Script | Shows off | Needs |
 |---|---|---|
+| [`echo_bot.py`](samples/echo_bot.py) | Plain `target_fn` handler wired to a real Source/Output (`waken-voice`), no LLM at all | `GROQ_API_KEY` |
 | [`telegram_bot.py`](samples/telegram_bot.py) | Channel `Source`/`Output` (`waken-telegram`) + a Target adapter | `TELEGRAM_BOT_TOKEN`, `GROQ_API_KEY` |
 | [`slack_bot.py`](samples/slack_bot.py) | Same shape, a different channel (`waken-slack`) and model | `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `GEMINI_API_KEY` |
 | [`file_drop_summarizer.py`](samples/file_drop_summarizer.py) | Built-in `FilesystemSource` + a custom `Target` that calls another `Target` | `GROQ_API_KEY` |
@@ -22,7 +23,7 @@ Common, real-world use cases for [Waken](https://github.com/WakenHQ/waken) — "
 ## Prerequisites
 
 - [`uv`](https://docs.astral.sh/uv/getting-started/installation/) installed.
-- Whichever API key(s) the sample you're running needs (see table above). Free tiers: [Groq](https://console.groq.com/keys), [Gemini](https://aistudio.google.com/apikey). [Ollama](https://ollama.com) needs no key at all — just a locally running daemon. `voice_assistant.py` needs an [OpenAI](https://platform.openai.com/api-keys) key (Whisper/TTS have no free tier, but are inexpensive per request); `hey_assistant.py` needs that same OpenAI key *or* a [Groq](https://console.groq.com/keys) key, since it can fall back to Groq transcription + free gTTS speech output.
+- Whichever API key(s) the sample you're running needs (see table above). Free tiers: [Groq](https://console.groq.com/keys), [Gemini](https://aistudio.google.com/apikey). [Ollama](https://ollama.com) needs no key at all — just a locally running daemon. `echo_bot.py` transcribes via free-tier Groq and speaks via `gTTS`, which needs no key at all. `voice_assistant.py` needs an [OpenAI](https://platform.openai.com/api-keys) key (Whisper/TTS have no free tier, but are inexpensive per request); `hey_assistant.py` needs that same OpenAI key *or* a [Groq](https://console.groq.com/keys) key, since it can fall back to Groq transcription + free gTTS speech output.
 - `hey_assistant.py` also needs a working microphone and PortAudio. On macOS/Windows the `sounddevice` wheel usually bundles PortAudio; on Linux install it separately first (e.g. `sudo apt-get install libportaudio2` on Debian/Ubuntu) — the PyPI wheel doesn't bundle it there.
 - To hear `hey_assistant.py`'s spoken replies out loud, it shells out to `afplay` (macOS, built in) or `paplay` (Linux) if one is on `PATH` — on Debian/Ubuntu, `paplay` comes from `sudo apt-get install pulseaudio-utils`. This is best-effort: without it, the reply is still written to `./voice-outbox`, just not played automatically.
 
